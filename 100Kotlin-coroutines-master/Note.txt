@@ -1,0 +1,4 @@
+100-Use kotlin coroutines in your Android app
+  https://developer.android.com/codelabs/kotlin-coroutines?hl=pt-br#0
+Step 1: OK (不太重要)
+  可快掃過,說要懂Repository.
