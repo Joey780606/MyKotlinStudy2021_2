@@ -1,4 +1,43 @@
 100-Use kotlin coroutines in your Android app
   https://developer.android.com/codelabs/kotlin-coroutines?hl=pt-br#0
-Step 1: OK (不太重要)
+Step 1: Before you begin - OK (不太重要)
   可快掃過,說要懂Repository.
+Step 2: Getting set up (純下載,不重要)
+Step 3. Run the starting sample app (重要)
+  1. coroutines-codelab 目錄,是最後執行的目錄
+  2. 解釋專案程式的功能
+  3. dependencies的宣告
+     kotlinx-coroutines-core — Main interface for using coroutines in Kotlin
+     kotlinx-coroutines-android — Support for the Android Main thread in coroutines
+Step 4. Coroutines in Kotlin (重要)
+  1. Main thread應避免被阻塞(blocking), Main thread的功能介紹
+  2. 若要顯示順暢,Main thread需每16ms來更新畫面.
+  3. 讀寫資料庫, 從網路取資料,都需避免佔用Main thread,否則會出現ANR問題(Application not responding)
+  4. callback pattern範例
+    a. @UiThread - 表示在 Main thread執行
+	b. show(result) callback允許slowFetch在背景 thread執行,且在ready時回傳結果.
+	c. Callback有一些缺點, 一是造成程式難以閱讀,二是callback不允許使用一些language特性,像exceptions.
+  5. suspend function,即當結果回傳前,function可以被暫時停止,讓其他的function可以繼續運作,這樣就不會阻塞Main thread
+    a. suspend keyword不會指定是由那個thread執行,此function可能在背景或是main thread執行.
+  6. 文範例中的@WorkerThread 很重要,只要非Main thread外的,都叫Work thread
+  7. Coroutines 在其他語言,常叫 async 和 await pattern.
+  8. Deferred.await() 下節會介紹
+Step 5. Controlling the UI with coroutines
+  1. CoroutineScope: 所有coroutines都在這執行. Scope透過 jobs 控制 coroutines 的 lifetime. 若cancel scope的job,他就會cancel此scope所有的coroutines. ex: 當你離開activity or fragment時
+  2. Dispatchers.Main - 在UI開始做coroutine時, 都是由此啟始. 這是Android的main thread. 當coroutine suspended時, Dispatchers.Main不會block main thread. 因 ViewModel coroutine大部分都是在main thread更新UI. 在main thread開始coroutines可節省額外的thread switch. 在開始後,Main thread能在任何時侯切換dispatcher.  ex: 它可使用其他dispatcher來 parse大量的Json結果.
+  3. 提供main-safety (介紹可參: https://www.cnblogs.com/mengdd/p/kotlin-coroutines-in-Android.html)
+  4. blocking code: 像排序list, 或從檔案裡讀取
+  5. viewModelScope 的使用: 
+    a. lifecycle-viewmodel-ktx library加入 CoroutineScope 到配置啟動UI-相關的coroutine ViewModel.  implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:x.x.x"
+	b. 上述 library 加入 viewModelScope 為 ViewModel class的擴展function. 此scope綁定 Dispatchers.Main, 當 ViewModel 被清除時(cleared) 會被自動 cancel.
+[程式閱讀]
+1. MainDatabase.kt - 資料庫的處理,很重要,可跟A792程式做比較
+2. MainNetwork.kt - 有用到 lazy, OkHttpClient, Retrofit, 還有 interface 的用法
+3. MainViewModel.kt - 
+  a. singleArgViewModelFactory 是在 util/ViewModelHelpers.kt , 裡面寫法重要
+  b. _snackBar, _spinner, _taps 的 MutableLiveData 宣告,重要
+  c. BACKGROUND 相關定義是在 util/Exector.kt 來在 background thread執行. 
+  d. Kotlin支援下劃線, Thread.sleep(1_000) 1_000象徵一秒 (https://www.kotlincn.net/docs/reference/basic-types.html)
+4. MainActivity.kt - 
+  a. val viewModel = ViewModelProviders 的處理, 重要
+5. util/Executors.kt - 在背景執行相關的程式,少少的,但可研究.
